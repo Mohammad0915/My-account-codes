@@ -1,0 +1,220 @@
+// اضافه کردن لینک "حساب من" به منوی هدر
+add_filter('wp_nav_menu_items', function ($items, $args) {
+  if ($args->theme_location == 'Header') {
+    if (is_user_logged_in()) {
+      $items .= '<li class="menu-item my-account-menu"><a href="' . esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))) . '">حساب من</a></li>';
+    } else {
+      $items .= '<li class="menu-item my-account-menu"><a href="' . esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))) . '">ورود / ثبت نام</a></li>';
+    }
+  }
+  return $items;
+}, 10, 2);
+
+// حذف تب دانلودها و خروج از منوی حساب کاربری
+add_filter('woocommerce_account_menu_items', function ($items) {
+  unset($items['downloads']);
+  unset($items['customer-logout']);
+  return $items;
+});
+
+// تغییر نام و ترتیب تب‌ها + اضافه کردن تب‌های دلخواه
+add_filter('woocommerce_account_menu_items', function ($items) {
+  $new_order = array(
+    'dashboard'    => 'داشبورد',
+    'orders'       => 'سفارش‌های من',
+    'edit-address' => 'آدرس‌ها',
+    'edit-account' => 'جزئیات حساب',
+    'wishlist'     => 'علاقه‌مندی‌ها',
+    'wallet'       => 'کیف پول',
+  );
+  return $new_order;
+});
+
+// محتوای داشبورد
+add_action('woocommerce_account_dashboard', function () {
+  $current_user = wp_get_current_user();
+  $user_name = $current_user->display_name ?: $current_user->user_login;
+
+  echo '<h2>خوش آمدید، ' . esc_html($user_name) . '!</h2>';
+  echo '<p>این داشبورد خلاصه فعالیت‌های شما را نمایش می‌دهد.</p>';
+
+  $orders_count = wc_get_customer_order_count($current_user->ID);
+  echo '<p>تعداد سفارش‌های شما: ' . esc_html($orders_count) . '</p>';
+
+  $wallet_balance = get_user_meta($current_user->ID, 'wallet_balance', true);
+  if ($wallet_balance === '') $wallet_balance = 0;
+  echo '<p>موجودی کیف پول: ' . esc_html($wallet_balance) . ' تومان</p>';
+
+  echo '<p>برای مشاهده سفارش‌ها، به تب <a href="' . esc_url(wc_get_account_endpoint_url('orders')) . '">سفارش‌ها</a> بروید.</p>';
+});
+
+// محتوای سفارش‌ها
+add_action('woocommerce_account_orders_endpoint', function () {
+  $current_user = wp_get_current_user();
+  $customer_orders = wc_get_orders(array(
+    'customer' => $current_user->ID,
+    'limit'    => -1,
+    'orderby'  => 'date',
+    'order'    => 'DESC',
+  ));
+
+  if (count($customer_orders) === 0) {
+    echo '<p>شما هنوز سفارشی ثبت نکرده‌اید. <a href="' . esc_url(wc_get_page_permalink('shop')) . '">مرور محصولات</a></p>';
+    return;
+  }
+
+  echo '<h2>سفارش‌های شما</h2>';
+  echo '<table class="shop_table shop_table_responsive my_account_orders">';
+  echo '<thead>
+            <tr>
+                <th>شماره سفارش</th>
+                <th>تاریخ</th>
+                <th>وضعیت</th>
+                <th>مبلغ کل</th>
+                <th>جزئیات</th>
+            </tr>
+          </thead>
+          <tbody>';
+
+  foreach ($customer_orders as $order) {
+    $order_id = $order->get_id();
+    $order_date = wc_format_datetime($order->get_date_created());
+    $order_status = wc_get_order_status_name($order->get_status());
+    $order_total = $order->get_total(); // فقط عدد
+    $order_currency = $order->get_currency();
+    $view_url = $order->get_view_order_url();
+
+    echo '<tr>
+                <td>#' . esc_html($order_id) . '</td>
+                <td>' . esc_html($order_date) . '</td>
+                <td>' . esc_html($order_status) . '</td>
+                <td>' . wc_price($order_total, array('currency' => $order_currency)) . '</td>
+                <td><a href="' . esc_url($view_url) . '">مشاهده</a></td>
+              </tr>';
+  }
+
+  echo '</tbody></table>';
+});
+
+// محتوای آدرس‌ها
+add_action('woocommerce_account_edit-address_endpoint', function () {
+  echo '<h2>آدرس‌های شما</h2>';
+  //echo do_shortcode('[woocommerce_my_account_edit_address]');
+});
+
+// محتوای جزئیات حساب
+add_action('woocommerce_account_edit-account_endpoint', function () {
+  echo '<h2>جزئیات حساب</h2>';
+  // echo do_shortcode('[woocommerce_my_account_edit]');
+});
+
+// محتوای تب علاقه‌مندی‌ها
+add_action('init', function () {
+  add_rewrite_endpoint('wishlist', EP_ROOT | EP_PAGES);
+});
+add_action('woocommerce_account_wishlist_endpoint', function () {
+  echo '<h2>لیست علاقه‌مندی‌ها</h2>';
+  echo '<p>اینجا می‌توانید محصولات مورد علاقه خود را ذخیره کنید.</p>';
+});
+
+// محتوای تب کیف پول
+add_action('init', function () {
+  add_rewrite_endpoint('wallet', EP_ROOT | EP_PAGES);
+});
+add_action('woocommerce_account_wallet_endpoint', function () {
+  $current_user = wp_get_current_user();
+  $wallet_balance = get_user_meta($current_user->ID, 'wallet_balance', true);
+  if ($wallet_balance === '') $wallet_balance = 0;
+  echo '<h2>کیف پول</h2>';
+  echo '<p>موجودی کیف پول: ' . esc_html($wallet_balance) . ' تومان</p>';
+});
+
+// ثبت endpoint کیف پول
+add_action('init', function () {
+  add_rewrite_endpoint('wallet', EP_ROOT | EP_PAGES);
+});
+
+// محتوای کیف پول واقعی
+add_action('woocommerce_account_wallet_endpoint', function () {
+
+  $current_user_id = get_current_user_id();
+
+  // گرفتن همه سفارش‌های کاربر
+  $orders = wc_get_orders(array(
+    'customer_id' => $current_user_id,
+    'limit'       => -1,
+    'orderby'     => 'date',
+    'order'       => 'ASC',
+  ));
+
+  $transactions = [];
+  $balance = 0;
+
+  // هر سفارش رو تبدیل به تراکنش می‌کنیم
+  foreach ($orders as $order) {
+    $total = floatval($order->get_total());
+    $status = $order->get_status();
+
+    if ($status == 'completed') {
+      // فرض: پرداخت شده = برداشت از کیف پول
+      $amount = -$total;
+      $desc = 'خرید محصول (سفارش #' . $order->get_id() . ')';
+    } else {
+      $amount = 0; // سفارش تکمیل نشده تاثیری ندارد
+      $desc = 'سفارش #' . $order->get_id() . ' در حال پردازش';
+    }
+
+    $transactions[] = [
+      'date'   => $order->get_date_created()->date('Y-m-d'),
+      'desc'   => $desc,
+      'amount' => $amount,
+    ];
+  }
+
+  // اگر میخوای تراکنش افزایش موجودی هم داشته باشی، میتونی متای کیف پول رو اضافه کنی
+  $wallet_additions = get_user_meta($current_user_id, 'wallet_additions', true);
+  if ($wallet_additions && is_array($wallet_additions)) {
+    foreach ($wallet_additions as $tx) {
+      $transactions[] = [
+        'date'   => $tx['date'],
+        'desc'   => $tx['desc'],
+        'amount' => $tx['amount'],
+      ];
+    }
+  }
+
+  // مرتب‌سازی بر اساس تاریخ
+  usort($transactions, function ($a, $b) {
+    return strtotime($a['date']) - strtotime($b['date']);
+  });
+
+  echo '<h2>کیف پول شما</h2>';
+  echo '<p>لیست تراکنش‌ها و مانده حساب شما:</p>';
+
+  echo '<table class="wallet-table">
+            <thead>
+                <tr>
+                    <th>تاریخ</th>
+                    <th>شرح تراکنش</th>
+                    <th>مقدار</th>
+                    <th>مانده</th>
+                </tr>
+            </thead>
+            <tbody>';
+
+  foreach ($transactions as $tx) {
+    $balance += $tx['amount'];
+    $amount_text = $tx['amount'] >= 0 ? '+' . number_format($tx['amount']) : number_format($tx['amount']);
+    echo '<tr>
+                <td>' . esc_html($tx['date']) . '</td>
+                <td>' . esc_html($tx['desc']) . '</td>
+                <td>' . $amount_text . ' تومان</td>
+                <td>' . number_format($balance) . ' تومان</td>
+              </tr>';
+  }
+
+  echo '</tbody></table>';
+
+  echo '<p>مانده نهایی کیف پول شما: <strong>' . number_format($balance) . ' تومان</strong></p>';
+});
+

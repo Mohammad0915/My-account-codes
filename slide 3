@@ -3,3 +3,9 @@
         slide3.addEventListener('click', function() {
             window.location.href = '/wordpress/درباره ما';
         });
+
+
+
+
+
+            <img src="http://localhost/wordpress/wp-content/uploads/2025/09/هیرو-بنر-سوم-copy.png" alt="بنر 3" id="slide3">

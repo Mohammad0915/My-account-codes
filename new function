@@ -1,0 +1,57 @@
+function custom_redirect_after_checkout($url, $order)
+{
+  // شناسهٔ سفارش رو از شیء $order دریافت می‌کنیم
+  $order_id = $order->get_id();
+
+  // آدرس صحیح برای مشاهدهٔ سفارش رو می‌سازیم
+  // و شناسهٔ سفارش رو به انتهای اون اضافه می‌کنیم
+  $redirect_url = 'http://localhost/wordpress/my-account/view-order/' . $order_id;
+
+  // اگر نیاز به اضافه کردن پارامترهای دیگر مثل کلید دارید، می‌تونید از add_query_arg استفاده کنید.
+  // به عنوان مثال:
+  // $order_key = $order->get_order_key();
+  // $redirect_url = add_query_arg('key', $order_key, $redirect_url);
+
+  return $redirect_url;
+}
+
+add_filter('woocommerce_get_checkout_order_received_url', 'custom_redirect_after_checkout', 10, 2);
+
+add_filter('woocommerce_get_checkout_order_received_url', 'custom_redirect_after_checkout', 10, 2);
+
+function custom_add_order_tracking_endpoint()
+{
+  add_rewrite_endpoint('order-tracking', EP_ROOT | EP_PAGES);
+}
+add_action('init', 'custom_add_order_tracking_endpoint');
+
+// اضافه کردن به کوئری‌های ووکامرس
+function custom_order_tracking_query_vars($vars)
+{
+  $vars[] = 'order-tracking';
+  return $vars;
+}
+add_filter('query_vars', 'custom_order_tracking_query_vars', 0);
+
+//---نمایش محتوا در endpoint---//
+function custom_order_tracking_content()
+{
+  echo do_shortcode('[woocommerce_order_tracking]');
+}
+add_action('woocommerce_account_order-tracking_endpoint', 'custom_order_tracking_content');
+//---اضافه کردن به منوی حساب کاربری---//
+function custom_add_order_tracking_link_my_account($items)
+{
+  // محل قرارگیری رو انتخاب کن (اینجا بعد از سفارش‌ها)
+  $new = array();
+
+  foreach ($items as $key => $value) {
+    $new[$key] = $value;
+    if ($key === 'orders') {
+      $new['order-tracking'] = 'پیگیری سفارش';
+    }
+  }
+
+  return $new;
+}
+add_filter('woocommerce_account_menu_items', 'custom_add_order_tracking_link_my_account');

@@ -1,0 +1,12 @@
+         <div class="footer-links">
+             <a href="http://localhost/wordpress/درباره ما"
+                 class="about-us-link"> درباره ما </a>
+         </div>
+         <!DOCTYPE html>
+         <html lang="fa">
+
+         <head>
+             <meta charset="UTF-8">
+             <title>hodcode پشتیبانی</title>
+             <link rel="stylesheet" href="style.css">
+         </head>

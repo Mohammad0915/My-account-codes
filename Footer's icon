@@ -1,0 +1,44 @@
+add_action('customize_register', function ($wp_customize) {
+  // Section
+  $wp_customize->add_section('hodcode_social_links', [
+    'title'    => __('Social Media Links', 'hodcode'),
+    'priority' => 30,
+  ]);
+
+  // Whatsapp
+  $wp_customize->add_setting('hodcode_whatsapp', [
+    'default'   => '',
+    'transport' => 'refresh',
+    'sanitize_callback' => 'esc_url_raw',
+  ]);
+  $wp_customize->add_control('hodcode_whatsapp', [
+    'label'   => __('Whatsapp URL', 'hodcode'),
+    'section' => 'hodcode_social_links',
+    'type'    => 'url',
+  ]);
+
+  // Telegram
+  $wp_customize->add_setting('hodcode_telegram', [
+    'default'   => '',
+    'transport' => 'refresh',
+    'sanitize_callback' => 'esc_url_raw',
+  ]);
+  $wp_customize->add_control('hodcode_telegram', [
+    'label'   => __('Telegram URL', 'hodcode'),
+    'section' => 'hodcode_social_links',
+    'type'    => 'url',
+  ]);
+
+  // LinkedIn
+  $wp_customize->add_setting('hodcode_linkedin', [
+    'default'   => '',
+    'transport' => 'refresh',
+    'sanitize_callback' => 'esc_url_raw',
+  ]);
+  $wp_customize->add_control('hodcode_linkedin', [
+    'label'   => __('LinkedIn URL', 'hodcode'),
+    'section' => 'hodcode_social_links',
+    'type'    => 'url',
+  ]);
+});
+

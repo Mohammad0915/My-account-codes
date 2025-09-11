@@ -1,0 +1,5 @@
+                // 👇 اضافه کردن کلیک به اسلاید سوم
+        const slide3 = document.getElementById('slide3');
+        slide3.addEventListener('click', function() {
+            window.location.href = '/wordpress/درباره ما';
+        });

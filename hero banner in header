@@ -1,0 +1,27 @@
+    <div class="hero-banner">
+        <div class="slides">
+            <img src="http://localhost/wordpress/wp-content/uploads/2025/09/SAVE_20250908_093612.jpg" alt="بنر 1">
+            <img src="http://localhost/wordpress/wp-content/uploads/2025/09/هیرو-بنر-دوم-copy.png" alt="بنر 2" id="slide2">
+            <img src="http://localhost/wordpress/wp-content/uploads/2025/09/هیرو-بنر-سوم-copy.png" alt="بنر 3">
+        </div>
+    </div>
+    <script>
+        let slides = document.querySelectorAll('.hero-banner .slides img');
+        let index = 0;
+
+        // فعال‌سازی تصویر اول
+        slides[index].classList.add('active');
+
+        // اسلاید خودکار
+        setInterval(() => {
+            slides[index].classList.remove('active');
+            index = (index + 1) % slides.length;
+            slides[index].classList.add('active');
+        }, 3000);
+
+        // 👇 اضافه کردن کلیک به اسلاید دوم
+        const slide2 = document.getElementById('slide2');
+        slide2.addEventListener('click', function() {
+            window.location.href = '/wordpress/deals';
+        });
+    </script>
